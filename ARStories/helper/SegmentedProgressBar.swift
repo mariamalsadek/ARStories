@@ -12,6 +12,7 @@ import UIKit
 protocol SegmentedProgressBarDelegate: class {
     func segmentedProgressBarChangedIndex(index: Int)
     func segmentedProgressBarFinished()
+    func segmentedProgressBarBack()
 }
 
 class SegmentedProgressBar: UIView {
@@ -55,7 +56,7 @@ class SegmentedProgressBar: UIView {
     private var hasDoneLayout = false // hacky way to prevent layouting again
     var currentAnimationIndex = 0
     
-    init(numberOfSegments: Int, duration: TimeInterval = 5.0) {
+    init(numberOfSegments: Int, duration: TimeInterval = 1.0) {
         self.duration = duration
         super.init(frame: CGRect.zero)
         
@@ -99,7 +100,7 @@ class SegmentedProgressBar: UIView {
     private func animate(animationIndex: Int = 0) {
         let nextSegment = segments[animationIndex]
         currentAnimationIndex = animationIndex
-        self.isPaused = false // no idea why we have to do this here, but it fixes everything :D
+//        self.isPaused = false // no idea why we have to do this here, but it fixes everything :D
         UIView.animate(withDuration: duration, delay: 0.0, options: .curveLinear, animations: {
             nextSegment.topSegmentView.frame.size.width = nextSegment.bottomSegmentView.frame.width
         }) { (finished) in
@@ -109,6 +110,7 @@ class SegmentedProgressBar: UIView {
             self.next()
         }
     }
+
     
     private func updateColors() {
         for segment in segments {
@@ -126,14 +128,27 @@ class SegmentedProgressBar: UIView {
             self.delegate?.segmentedProgressBarFinished()
         }
     }
-    
+    private func previous() {
+        let newIndex = self.currentAnimationIndex - 1
+        if newIndex < 0 {
+            self.delegate?.segmentedProgressBarBack()
+        } else {
+            self.rewind()
+            
+        }
+    }
     func skip() {
         let currentSegment = segments[currentAnimationIndex]
         currentSegment.topSegmentView.frame.size.width = currentSegment.bottomSegmentView.frame.width
         currentSegment.topSegmentView.layer.removeAllAnimations()
         self.next()
     }
-    
+    func back() {
+        let currentSegment = segments[currentAnimationIndex]
+        currentSegment.topSegmentView.frame.size.width = 0
+        currentSegment.topSegmentView.layer.removeAllAnimations()
+        self.previous()
+    }
     func rewind() {
         let currentSegment = segments[currentAnimationIndex]
         currentSegment.topSegmentView.layer.removeAllAnimations()
