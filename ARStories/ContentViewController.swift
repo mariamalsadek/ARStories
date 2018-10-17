@@ -17,7 +17,7 @@ class ContentViewController: UIViewController, UIPageViewControllerDataSource, U
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+     
         // Do any additional setup after loading the view.
         ContentViewControllerVC = self
         pageViewController = storyboard?.instantiateViewController(withIdentifier: "PageViewController") as? UIPageViewController
@@ -91,6 +91,12 @@ class ContentViewController: UIViewController, UIPageViewControllerDataSource, U
         let startingViewController: PreViewController = viewControllerAtIndex(index: position)!
         let viewControllers = [startingViewController]
         pageViewController!.setViewControllers(viewControllers , direction: .forward, animated: true, completion: nil)
+    }
+    // Reverse to previous page
+    func goPreviousPage(backwardTo position: Int) {
+        let startingViewController: PreViewController = viewControllerAtIndex(index: position)!
+        let viewControllers = [startingViewController]
+        pageViewController!.setViewControllers(viewControllers , direction: .reverse, animated: true, completion: nil)
     }
     
     // MARK: - Button Actions
