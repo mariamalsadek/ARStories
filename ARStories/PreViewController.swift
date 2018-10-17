@@ -44,7 +44,7 @@ class PreViewController: UIViewController, SegmentedProgressBarDelegate {
         SPB.topColor = UIColor.white
         SPB.bottomColor = UIColor.white.withAlphaComponent(0.25)
         SPB.padding = 2
-        SPB.isPaused = true
+//         SPB.isPaused = true
         SPB.currentAnimationIndex = 0
         SPB.duration = getDuration(at: 0)
         view.addSubview(SPB)
@@ -55,10 +55,22 @@ class PreViewController: UIViewController, SegmentedProgressBarDelegate {
         tapGestureImage.numberOfTouchesRequired = 1
         imagePreview.addGestureRecognizer(tapGestureImage)
         
+        let longGestureImage = UILongPressGestureRecognizer(target: self, action: #selector(longPress(_:)))
+        longGestureImage.cancelsTouchesInView = false
+        longGestureImage.minimumPressDuration = 0.1
+        imagePreview.addGestureRecognizer(longGestureImage)
+        
+        
         let tapGestureVideo = UITapGestureRecognizer(target: self, action: #selector(tapOn(_:)))
         tapGestureVideo.numberOfTapsRequired = 1
         tapGestureVideo.numberOfTouchesRequired = 1
         videoView.addGestureRecognizer(tapGestureVideo)
+        
+        let longGestureVideo = UILongPressGestureRecognizer(target: self, action: #selector(longPress(_:)))
+        longGestureVideo.cancelsTouchesInView = false
+        longGestureVideo.minimumPressDuration = 0.1
+        videoView.addGestureRecognizer(longGestureVideo)
+        
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -111,18 +123,59 @@ class PreViewController: UIViewController, SegmentedProgressBarDelegate {
             _ = ContentViewControllerVC.goNextPage(fowardTo: pageIndex + 1)
         }
     }
+     //3
+    func segmentedProgressBarBack() {
+        if pageIndex == 0{
+            self.dismiss(animated: true, completion: nil)
+        }
+        else {
+            _ = ContentViewControllerVC.goPreviousPage(backwardTo: pageIndex - 1)
+        }
+    }
     
     @objc func tapOn(_ sender: UITapGestureRecognizer) {
-        SPB.skip()
+        if let location = sender.location(in: self.imagePreview) as? CGPoint {
+            let xLocation = location.x
+            if xLocation < self.imagePreview.frame.width/3.0 {
+                SPB.back()
+            }else{
+                SPB.skip()
+            }
+        }
+        
+    }
+    
+      @objc func longPress(_ gestureRecognizer: UILongPressGestureRecognizer) {
+        if gestureRecognizer.state == .began {
+            if self.SPB != nil {
+                self.SPB.isPaused = true
+                if self.player != nil {
+                   self.player.pause()
+                }
+            }
+        }else if gestureRecognizer.state == .ended {
+            if self.SPB != nil {
+                self.SPB.isPaused = false
+                  if self.player != nil {
+                    self.player.play()
+                }
+            }
+        }
+        
     }
     
     //MARK: - Play or show image
     func playVideoOrLoadImage(index: NSInteger) {
+         self.SPB.isPaused = true
         if item[index].type == "image" {
             self.SPB.duration = 5
             self.imagePreview.isHidden = false
             self.videoView.isHidden = true
-            self.imagePreview.imageFromServerURL(item[index].url)
+//             self.imagePreview.imageFromServerURL(item[index].url)
+               self.loader.loadImageWith(from: item[index].url) { (success, image) in
+                self.SPB.isPaused = false
+                self.imagePreview.image = image
+            }
         } else {
             self.imagePreview.isHidden = true
             self.videoView.isHidden = false
@@ -141,6 +194,7 @@ class PreViewController: UIViewController, SegmentedProgressBarDelegate {
             let durationTime = CMTimeGetSeconds(duration)
             
             self.SPB.duration = durationTime
+             self.SPB.isPaused = false
             self.player.play()
         }
     }
